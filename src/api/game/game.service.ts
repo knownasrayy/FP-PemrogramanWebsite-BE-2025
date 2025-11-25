@@ -1,6 +1,7 @@
 import {
   type Games,
   type GameTemplates,
+  type LikedGames,
   type Prisma,
   type ROLE,
   type Users,
@@ -21,6 +22,7 @@ export abstract class GameService {
     query: IGamePaginateQuery,
     is_private: boolean,
     user_id?: string,
+    current_user_id?: string,
   ) {
     const args: {
       where: Prisma.GamesWhereInput;
@@ -50,6 +52,12 @@ export abstract class GameService {
             liked: true,
           },
         },
+        liked: current_user_id
+          ? {
+              where: { user_id: current_user_id },
+              select: { id: true },
+            }
+          : undefined,
         is_published: is_private,
         game_template: {
           select: {
@@ -77,7 +85,7 @@ export abstract class GameService {
     const paginationResult = await paginate<
       Games & { creator: Users } & { game_template: GameTemplates } & {
         _count: { liked: number };
-      },
+      } & { liked: LikedGames[] },
       typeof args
     >(prisma.games, query.page, query.perPage, args);
 
@@ -88,6 +96,10 @@ export abstract class GameService {
       is_published: is_private ? game.is_published : undefined,
       creator_id: user_id ? undefined : game.creator.id,
       creator_name: user_id ? undefined : game.creator.username,
+      is_game_liked: current_user_id
+        ? game.liked && game.liked.length > 0
+        : undefined,
+      liked: undefined,
       total_liked: game._count.liked,
       _count: undefined,
     }));

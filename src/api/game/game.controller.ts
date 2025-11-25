@@ -30,14 +30,20 @@ import {
 export const GameController = Router()
   .get(
     '/',
-    async (request: Request, response: Response, next: NextFunction) => {
+    validateAuth({ optional: true }),
+    async (request: AuthedRequest, response: Response, next: NextFunction) => {
       try {
         const query = AdditionalValidation.validate(
           GamePaginateQuerySchema,
           request.query,
         );
 
-        const games = await GameService.getAllGame(query, false);
+        const games = await GameService.getAllGame(
+          query,
+          false,
+          undefined,
+          request.user?.user_id,
+        );
         const result = new SuccessResponse(
           StatusCodes.OK,
           'Get all game successfully',
@@ -92,7 +98,12 @@ export const GameController = Router()
           request.query,
         );
 
-        const games = await GameService.getAllGame(query, true);
+        const games = await GameService.getAllGame(
+          query,
+          true,
+          undefined,
+          request.user!.user_id,
+        );
         const result = new SuccessResponse(
           StatusCodes.OK,
           'Get all game (private) successfully',
@@ -108,8 +119,9 @@ export const GameController = Router()
   )
   .get(
     '/user/:user_id',
+    validateAuth({ optional: true }),
     async (
-      request: Request<{ user_id: string }>,
+      request: AuthedRequest<{ user_id: string }>,
       response: Response,
       next: NextFunction,
     ) => {
@@ -123,6 +135,7 @@ export const GameController = Router()
           query,
           false,
           request.params.user_id,
+          request.user?.user_id,
         );
         const result = new SuccessResponse(
           StatusCodes.OK,

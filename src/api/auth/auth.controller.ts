@@ -105,6 +105,7 @@ export const AuthController = Router()
           query,
           true,
           request.user!.user_id,
+          request.user!.user_id,
         );
         const result = new SuccessResponse(
           StatusCodes.OK,
