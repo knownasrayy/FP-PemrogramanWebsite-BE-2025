@@ -1,0 +1,106 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// 1. Model User (Untuk Autentikasi dan Transaksi)
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  username      String
+  password      String         // Hash password yang disimpan
+
+  // Relationships
+  transactions  Transaction[]
+
+  // Timestamps
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+// 2. Model Genre (Untuk Dropdown Genre pada Form Tambah Buku)
+model Genre {
+  id        String   @id @default(uuid())
+  name      String   @unique
+
+  // Relationships
+  books     Book[]
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// 3. Model Book (Diperbarui dengan field imageUrl opsional)
+model Book {
+  id              String           @id @default(uuid())
+  title           String           @unique
+  writer          String
+  publisher       String
+  price           Float
+  stock           Int
+
+  // Field opsional sesuai permintaan soal
+  isbn            String?          // (optional)
+  description     String?          // (optional) 
+  publicationYear Int?             // (optional) 
+  condition       String?          // Untuk filter by condition 
+  imageUrl        String?          // Untuk book_image (Optional) 
+
+  // Relationships to Genre
+  genreId         String
+  genre           Genre            @relation(fields: [genreId], references: [id])
+
+  // Relationships to Transaction
+  transactionItems TransactionItem[]
+
+  // Timestamps
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  // Indexing untuk query cepat
+  @@index([title])
+  @@index([publicationYear])
+}
+
+// 4. Model Transaction (Riwayat Transaksi Pengguna)
+model Transaction {
+  id                String            @id @default(uuid())
+  userId            String            // Pembeli
+  totalAmount       Int               // Total kuantitas item
+  totalPrice        Float             // Total harga
+
+  // Relationships
+  user              User              @relation(fields: [userId], references: [id])
+  items             TransactionItem[] // Detail item yang dibeli
+
+  // Timestamps
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  // Indexing untuk query cepat (misal: sort by id, amount, price) 
+  @@index([totalAmount])
+  @@index([totalPrice])
+}
+
+// 5. Model TransactionItem (Detail Item dalam Satu Transaksi)
+// Model ini diperlukan untuk mendukung user dapat membeli >1 item 
+model TransactionItem {
+  id            String    @id @default(uuid())
+  transactionId String
+  bookId        String
+  quantity      Int
+  price         Float     // Harga buku saat transaksi terjadi
+
+  // Relationships
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
+  book          Book        @relation(fields: [bookId], references: [id])
+
+  // Timestamps
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
