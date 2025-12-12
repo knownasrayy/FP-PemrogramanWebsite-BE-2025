@@ -1,0 +1,36 @@
+{
+  "name": "Hangman API",
+  "basePath": "/",
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/game-list/hangman",
+      "description": "List hangman games",
+      "responses": {
+        "200": {
+          "description": "OK",
+          "body": {
+            "success": true,
+            "message": "Get game list successfully",
+            "data": [
+              {
+                "slug": "hangman",
+                "name": "Hangman",
+                "description": "Classic word guessing game",
+                "logo": "mdi-hangman"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/game-list/hangman/detail",
+      "description": "Get hangman game detail",
+      "responses": {
+        "200": { "description": "OK" }
+      }
+    }
+  ]
+}
