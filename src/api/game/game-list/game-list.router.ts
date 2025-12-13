@@ -3,6 +3,7 @@
 import { Router } from 'express';
 
 import { AnagramController } from './anagram/anagram.controller';
+import { HangmanController } from './hangman/hangman.controller';
 import { MazeChaseController } from './maze-chase/maze-chase.controller';
 import { PairOrNoPairController } from './pair-or-no-pair/pair-or-no-pair.controller';
 import { QuizController } from './quiz/quiz.controller';
@@ -23,5 +24,6 @@ GameListRouter.use('/pair-or-no-pair', PairOrNoPairController);
 GameListRouter.use('/type-speed', TypeSpeedController);
 GameListRouter.use('/spin-the-wheel', SpinTheWheelController);
 GameListRouter.use('/true-or-false', TrueOrFalseController);
+GameListRouter.use('/hangman', HangmanController);
 
 export default GameListRouter;
