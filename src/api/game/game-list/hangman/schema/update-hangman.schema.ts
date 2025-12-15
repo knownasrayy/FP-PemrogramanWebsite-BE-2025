@@ -6,10 +6,7 @@ import {
   StringToObjectSchema,
 } from '@/common';
 
-export const HangmanQuestionSchema = z.object({
-  question: z.string().max(500).trim(),
-  answer: z.string().max(200).trim(),
-});
+import { HangmanQuestionSchema } from './hangman-question.schema';
 
 export const UpdateHangmanSchema = z.object({
   name: z.string().max(128).trim().optional(),

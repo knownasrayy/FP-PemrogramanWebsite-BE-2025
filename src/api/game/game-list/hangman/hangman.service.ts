@@ -3,7 +3,7 @@ import { StatusCodes } from 'http-status-codes';
 import { v4 } from 'uuid';
 
 import { ErrorResponse, type IHangmanJson, prisma } from '@/common';
-import { FileManager } from '@/utils';
+import { FileManager, shuffleArray } from '@/utils';
 
 import {
   type ICreateHangman,
@@ -153,7 +153,7 @@ export abstract class HangmanService {
       creator_username: creator?.username || 'Unknown',
       is_published: game.is_published,
       questions: gameJson.is_question_shuffled
-        ? (gameJson.questions ?? []).sort(() => Math.random() - 0.5)
+        ? shuffleArray(gameJson.questions ?? [])
         : (gameJson.questions ?? []),
     };
   }
@@ -190,9 +190,7 @@ export abstract class HangmanService {
       );
 
     const oldHangmanJson = game.game_json as unknown as IHangmanJson | null;
-    const oldImagePaths: string[] = [];
-
-    if (game.thumbnail_image) oldImagePaths.push(game.thumbnail_image);
+    // oldImagePaths logic removed as per review
 
     let newThumbnailImagePath = game.thumbnail_image;
 
@@ -288,11 +286,7 @@ export abstract class HangmanService {
     });
 
     // Delete old images
-    if (newThumbnailImagePath !== game.thumbnail_image) {
-      for (const path of oldImagePaths) {
-        await FileManager.remove(path);
-      }
-    }
+    // Redundant deletion Logic removed
 
     return updatedGame;
   }
@@ -337,11 +331,7 @@ export abstract class HangmanService {
 
     // Delete images
     for (const path of oldImagePaths) {
-      try {
-        await FileManager.remove(path);
-      } catch (error) {
-        console.error(`Failed to remove file: ${path}`, error);
-      }
+      await FileManager.remove(path);
     }
 
     return { id: game_id };
@@ -542,48 +532,5 @@ export abstract class HangmanService {
       throw new ErrorResponse(StatusCodes.NOT_FOUND, 'Game template not found');
 
     return result.id;
-  }
-
-  /**
-   * Update publish status
-   */
-  static async updatePublishStatus(
-    game_id: string,
-    is_publish: boolean,
-    user_id: string,
-    user_role: ROLE,
-  ) {
-    const game = await prisma.games.findUnique({
-      where: { id: game_id },
-      select: {
-        id: true,
-        creator_id: true,
-        game_template: {
-          select: { slug: true },
-        },
-      },
-    });
-
-    if (!game || game.game_template.slug !== this.HANGMAN_SLUG)
-      throw new ErrorResponse(StatusCodes.NOT_FOUND, 'Game not found');
-
-    if (user_role !== 'SUPER_ADMIN' && game.creator_id !== user_id)
-      throw new ErrorResponse(
-        StatusCodes.FORBIDDEN,
-        'User cannot update this game',
-      );
-
-    const updatedGame = await prisma.games.update({
-      where: { id: game_id },
-      data: {
-        is_published: is_publish,
-      },
-      select: {
-        id: true,
-        is_published: true,
-      },
-    });
-
-    return updatedGame;
   }
 }
